@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Minha Grana">
+<meta name="theme-color" content="#0f172a">
+<title>Minha Grana</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <!-- Header -->
+  <header id="header">
+    <div class="header-top">
+      <div class="header-left">
+        <span class="app-logo">₿</span>
+        <div class="app-title">Minha Grana</div>
+      </div>
+      <div class="header-month-badge" id="currentMonthLabel">Junho 2025</div>
+    </div>
+    <div class="header-nav">
+      <button class="month-nav-btn" id="prevMonthBtn" aria-label="Mês anterior">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="header-month-display" id="currentMonthDisplay">
+        <span class="header-month-name">Junho</span>
+        <span class="header-month-year">2025</span>
+      </div>
+      <button class="month-nav-btn" id="nextMonthBtn" aria-label="Próximo mês">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Month Picker Modal -->
+  <div id="monthPickerModal" class="modal hidden">
+    <div class="modal-backdrop" id="monthPickerBackdrop"></div>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title">Escolher período</span>
+        <button class="modal-close" id="closeMonthPicker">✕</button>
+      </div>
+      <div class="month-picker-grid" id="monthPickerGrid"></div>
+    </div>
+  </div>
+
+  <!-- Nav Tabs -->
+  <nav id="nav">
+    <button class="nav-btn active" data-tab="dashboard">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Início</span>
+    </button>
+    <button class="nav-btn" data-tab="income">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+      <span>Entradas</span>
+    </button>
+    <button class="nav-btn" data-tab="expenses">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+      <span>Saídas</span>
+    </button>
+    <button class="nav-btn" data-tab="investments">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      <span>Invest.</span>
+    </button>
+    <button class="nav-btn" data-tab="annual">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Anual</span>
+    </button>
+  </nav>
+
+  <!-- Content Area -->
+  <main id="content">
+    <!-- DASHBOARD TAB -->
+    <section id="tab-dashboard" class="tab-content active">
+      <div class="section-cards">
+        <div class="balance-card">
+          <div class="balance-label">Saldo do mês</div>
+          <div class="balance-value" id="dashBalance">R$ 0,00</div>
+          <div class="balance-sub" id="dashBalanceSub">+R$ 0,00 entradas · -R$ 0,00 saídas</div>
+        </div>
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-card income-card">
+          <div class="summary-icon">↑</div>
+          <div>
+            <div class="summary-label">Entradas</div>
+            <div class="summary-value" id="dashIncome">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="summary-card expense-card">
+          <div class="summary-icon">↓</div>
+          <div>
+            <div class="summary-label">Saídas</div>
+            <div class="summary-value" id="dashExpenses">R$ 0,00</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Distribuição de Gastos</div>
+      <div class="chart-card">
+        <canvas id="dashPieChart" height="220"></canvas>
+        <div id="dashPieLegend" class="pie-legend"></div>
+      </div>
+
+      <div class="section-title">Últimas Transações</div>
+      <div id="recentTransactions" class="transaction-list"></div>
+    </section>
+
+    <!-- INCOME TAB -->
+    <section id="tab-income" class="tab-content">
+      <div class="tab-header-row">
+        <div class="section-title" style="margin:0">Entradas</div>
+        <button class="add-btn" id="addIncomeBtn">+ Adicionar</button>
+      </div>
+
+      <div class="filter-pills">
+        <button class="pill active" data-filter="all">Todas</button>
+        <button class="pill" data-filter="fixed">Fixas</button>
+        <button class="pill" data-filter="variable">Variáveis</button>
+      </div>
+
+      <div class="summary-row" style="margin-bottom:16px">
+        <div class="summary-card income-card">
+          <div class="summary-icon">≡</div>
+          <div>
+            <div class="summary-label">Fixas</div>
+            <div class="summary-value" id="fixedIncomeTotal">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="summary-card" style="border-color:#4ade80">
+          <div class="summary-icon" style="color:#4ade80">+</div>
+          <div>
+            <div class="summary-label">Variáveis</div>
+            <div class="summary-value" id="varIncomeTotal">R$ 0,00</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="incomeList" class="transaction-list"></div>
+    </section>
+
+    <!-- EXPENSES TAB -->
+    <section id="tab-expenses" class="tab-content">
+      <div class="tab-header-row">
+        <div class="section-title" style="margin:0">Saídas</div>
+        <button class="add-btn" id="addExpenseBtn">+ Adicionar</button>
+      </div>
+
+      <div class="filter-pills">
+        <button class="pill active" data-filter="all">Todas</button>
+        <button class="pill" data-filter="fixed">Fixas</button>
+        <button class="pill" data-filter="variable">Variáveis</button>
+        <button class="pill" data-filter="credit">Cartão</button>
+      </div>
+
+      <div class="expense-summary-grid">
+        <div class="summary-card expense-card">
+          <div class="summary-icon">≡</div>
+          <div>
+            <div class="summary-label">Fixas</div>
+            <div class="summary-value" id="fixedExpTotal">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="summary-card" style="border-color:#f87171">
+          <div class="summary-icon" style="color:#f87171">~</div>
+          <div>
+            <div class="summary-label">Variáveis</div>
+            <div class="summary-value" id="varExpTotal">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="summary-card" style="border-color:#a78bfa; grid-column: 1/-1">
+          <div class="summary-icon" style="color:#a78bfa">💳</div>
+          <div>
+            <div class="summary-label">Cartão de Crédito</div>
+            <div class="summary-value" id="creditExpTotal">R$ 0,00</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="expenseList" class="transaction-list"></div>
+    </section>
+
+    <!-- INVESTMENTS TAB -->
+    <section id="tab-investments" class="tab-content">
+      <div class="tab-header-row">
+        <div class="section-title" style="margin:0">Investimentos</div>
+        <button class="add-btn" id="addInvestmentBtn">+ Adicionar</button>
+      </div>
+
+      <div class="summary-row">
+        <div class="summary-card" style="border-color:#38bdf8">
+          <div class="summary-icon" style="color:#38bdf8">Σ</div>
+          <div>
+            <div class="summary-label">Total investido</div>
+            <div class="summary-value" id="investTotal">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="summary-card" style="border-color:#4ade80">
+          <div class="summary-icon" style="color:#4ade80">%</div>
+          <div>
+            <div class="summary-label">Rendimento hoje</div>
+            <div class="summary-value" id="investYield">R$ 0,00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Projection Tool -->
+      <div class="invest-proj-card">
+        <div class="proj-title">Simulador de Projeção</div>
+        <div class="proj-form">
+          <div class="proj-row">
+            <label>Valor inicial</label>
+            <input type="text" id="projAmount" placeholder="R$ 0,00" inputmode="decimal">
+          </div>
+          <div class="proj-row">
+            <label>Taxa anual (%)</label>
+            <input type="number" id="projRate" value="12.65" step="0.01" min="0">
+          </div>
+          <div class="proj-row">
+            <label>Período</label>
+            <div class="proj-period-btns">
+              <button class="period-btn active" data-days="30">30d</button>
+              <button class="period-btn" data-days="60">60d</button>
+              <button class="period-btn" data-days="90">90d</button>
+              <button class="period-btn" data-days="180">6m</button>
+              <button class="period-btn" data-days="365">1a</button>
+            </div>
+          </div>
+        </div>
+        <div class="proj-result" id="projResult">
+          <div class="proj-result-row">
+            <span>Dias úteis</span><strong id="projWorkdays">—</strong>
+          </div>
+          <div class="proj-result-row">
+            <span>Rendimento</span><strong id="projYield" class="text-green">—</strong>
+          </div>
+          <div class="proj-result-row total-row">
+            <span>Total final</span><strong id="projTotal">—</strong>
+          </div>
+        </div>
+        <div class="chart-card" style="margin-top:12px;padding:12px">
+          <canvas id="projChart" height="180"></canvas>
+        </div>
+      </div>
+
+      <div class="section-title">Carteira</div>
+      <div id="investmentList" class="transaction-list"></div>
+
+      <div class="section-title">Distribuição</div>
+      <div class="chart-card">
+        <canvas id="investPieChart" height="200"></canvas>
+        <div id="investPieLegend" class="pie-legend"></div>
+      </div>
+    </section>
+
+    <!-- ANNUAL TAB -->
+    <section id="tab-annual" class="tab-content">
+      <div class="section-title">Visão Anual <span id="annualYear">2025</span></div>
+
+      <div class="summary-row">
+        <div class="summary-card income-card">
+          <div class="summary-icon">↑</div>
+          <div>
+            <div class="summary-label">Total entradas</div>
+            <div class="summary-value" id="annualIncome">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="summary-card expense-card">
+          <div class="summary-icon">↓</div>
+          <div>
+            <div class="summary-label">Total saídas</div>
+            <div class="summary-value" id="annualExpenses">R$ 0,00</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <canvas id="annualBarChart" height="260"></canvas>
+      </div>
+
+      <div class="section-title">Saldo por mês</div>
+      <div id="monthlyBalanceList" class="transaction-list"></div>
+    </section>
+  </main>
+
+  <!-- FAB -->
+  <button class="fab hidden" id="fab">+</button>
+
+  <!-- Add Income Modal -->
+  <div id="incomeModal" class="modal hidden">
+    <div class="modal-backdrop" id="incomeBackdrop"></div>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title" id="incomeModalTitle">Nova Entrada</span>
+        <button class="modal-close" id="closeIncome">✕</button>
+      </div>
+      <form id="incomeForm" class="modal-form">
+        <input type="hidden" id="incomeEditId">
+        <div class="form-group">
+          <label>Descrição</label>
+          <input type="text" id="incomeDesc" placeholder="Ex: Salário, Freelance..." required>
+        </div>
+        <div class="form-group">
+          <label>Valor (R$)</label>
+          <input type="text" id="incomeValue" placeholder="0,00" inputmode="decimal" required>
+        </div>
+        <div class="form-group">
+          <label>Tipo</label>
+          <select id="incomeType">
+            <option value="fixed">Fixo</option>
+            <option value="variable">Variável</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="incomeDate" required>
+        </div>
+        <div class="form-group">
+          <label>Categoria</label>
+          <select id="incomeCategory">
+            <option value="salary">Salário</option>
+            <option value="freelance">Freelance</option>
+            <option value="rent">Aluguel recebido</option>
+            <option value="investment">Rendimento</option>
+            <option value="other">Outros</option>
+          </select>
+        </div>
+        <button type="submit" class="submit-btn">Salvar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Expense Modal -->
+  <div id="expenseModal" class="modal hidden">
+    <div class="modal-backdrop" id="expenseBackdrop"></div>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title" id="expenseModalTitle">Nova Saída</span>
+        <button class="modal-close" id="closeExpense">✕</button>
+      </div>
+      <form id="expenseForm" class="modal-form">
+        <input type="hidden" id="expenseEditId">
+        <div class="form-group">
+          <label>Descrição</label>
+          <input type="text" id="expenseDesc" placeholder="Ex: Aluguel, Supermercado..." required>
+        </div>
+        <div class="form-group">
+          <label>Valor (R$)</label>
+          <input type="text" id="expenseValue" placeholder="0,00" inputmode="decimal" required>
+        </div>
+        <div class="form-group">
+          <label>Tipo</label>
+          <select id="expenseType">
+            <option value="fixed">Fixo</option>
+            <option value="variable">Variável</option>
+            <option value="credit">Cartão de Crédito</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="expenseDate" required>
+        </div>
+        <div class="form-group">
+          <label>Categoria</label>
+          <select id="expenseCategory">
+            <option value="housing">Moradia</option>
+            <option value="food">Alimentação</option>
+            <option value="transport">Transporte</option>
+            <option value="health">Saúde</option>
+            <option value="education">Educação</option>
+            <option value="leisure">Lazer</option>
+            <option value="utilities">Contas/Serviços</option>
+            <option value="clothing">Vestuário</option>
+            <option value="other">Outros</option>
+          </select>
+        </div>
+        <button type="submit" class="submit-btn">Salvar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Investment Modal -->
+  <div id="investmentModal" class="modal hidden">
+    <div class="modal-backdrop" id="investmentBackdrop"></div>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="modal-title" id="investmentModalTitle">Novo Investimento</span>
+        <button class="modal-close" id="closeInvestment">✕</button>
+      </div>
+      <form id="investmentForm" class="modal-form">
+        <input type="hidden" id="investEditId">
+        <div class="form-group">
+          <label>Nome</label>
+          <input type="text" id="investName" placeholder="Ex: Caixinha Nubank, CDB, PETR4..." required>
+        </div>
+        <div class="form-group">
+          <label>Tipo</label>
+          <select id="investType">
+            <option value="cdi">Renda Fixa (CDI/CDB)</option>
+            <option value="savings">Poupança</option>
+            <option value="selic">Tesouro Selic</option>
+            <option value="ipca">Tesouro IPCA+</option>
+            <option value="stocks">Ações</option>
+            <option value="fiis">FIIs</option>
+            <option value="crypto">Criptomoedas</option>
+            <option value="other">Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Valor investido (R$)</label>
+          <input type="text" id="investAmount" placeholder="0,00" inputmode="decimal" required>
+        </div>
+        <div class="form-group">
+          <label>Data de início</label>
+          <input type="date" id="investDate" required>
+        </div>
+        <div class="form-group" id="investRateGroup">
+          <label>Taxa anual (% a.a.)</label>
+          <input type="number" id="investRate" placeholder="12.65" step="0.01" min="0" value="12.65">
+          <small class="form-hint">Nubank: ~13% a.a. | CDB 100% CDI: ~12.65% a.a.</small>
+        </div>
+        <div class="form-group" id="investCdiGroup">
+          <label>% do CDI</label>
+          <input type="number" id="investCdiPct" placeholder="100" step="0.1" min="0" value="100">
+        </div>
+        <button type="submit" class="submit-btn">Salvar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirm delete modal -->
+  <div id="confirmModal" class="modal hidden">
+    <div class="modal-backdrop" id="confirmBackdrop"></div>
+    <div class="modal-sheet" style="padding-bottom: 2rem">
+      <div class="modal-handle"></div>
+      <div style="padding:1.5rem;text-align:center">
+        <div style="font-size:2rem;margin-bottom:12px">🗑️</div>
+        <div style="font-size:1rem;font-weight:600;margin-bottom:8px">Excluir item?</div>
+        <div style="font-size:0.875rem;color:#94a3b8;margin-bottom:24px">Essa ação não pode ser desfeita.</div>
+        <div style="display:flex;gap:12px">
+          <button class="cancel-btn" id="confirmCancel">Cancelar</button>
+          <button class="delete-btn" id="confirmDelete">Excluir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
