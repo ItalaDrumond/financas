@@ -1,11 +1,11 @@
 const CACHE = 'mgrana-v1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/app.js',
-  '/manifest.json',
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js'
+  '/financas/',
+  '/financas/index.html',
+  '/financas/style.css',
+  '/financas/app.js',
+  '/financas/manifest.json',
+  'https://cdnjs.cloudflare.com/...'
 ];
 
 self.addEventListener('install', e => {
