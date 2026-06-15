@@ -18,18 +18,44 @@ const IBKG = {
 
 let now = new Date();
 let curYear = now.getFullYear(), curMonth = now.getMonth();
-let mCtx = {tipo:'entrada', cat:'fixo'};
+let mCtx = {tipo:'entrada', cat:'fixo', fixo:false};
 let selIcon = '💰';
 let cMes = null, cAnual = null, cProj = null;
 
 let entries = [];
+let fixedEntries = [];
 try { entries = JSON.parse(localStorage.getItem('fin_entries')||'[]'); } catch(e){ entries = []; }
+try { fixedEntries = JSON.parse(localStorage.getItem('fin_fixed')||'[]'); } catch(e){ fixedEntries = []; }
 
-function persist(){ try{ localStorage.setItem('fin_entries', JSON.stringify(entries)); }catch(e){} }
+function persist(){ 
+  try{ localStorage.setItem('fin_entries', JSON.stringify(entries)); }catch(e){} 
+  try{ localStorage.setItem('fin_fixed', JSON.stringify(fixedEntries)); }catch(e){} 
+}
+function applyFixedEntries(y, m) {
+  const ym = ymKey(y, m);
+  fixedEntries.forEach(fe => {
+    if (!entries.find(e => e.id === fe.id && e.ym === ym)) {
+      entries.push({
+        id: fe.id,
+        nome: fe.nome,
+        valor: fe.valor,
+        tipo: fe.tipo,
+        cat: fe.cat,
+        icon: fe.icon,
+        ym: ym,
+        fixedId: fe.id
+      });
+    }
+  });
+  persist();
+}
 function fmt(v){ return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtS(v){ return 'R$ '+Math.round(v).toLocaleString('pt-BR'); }
 function ymKey(y,m){ return y+'-'+(m<9?'0':'')+(m+1); }
-function getMes(y,m){ return entries.filter(e=>e.ym===ymKey(y,m)); }
+function getMes(y,m){ 
+  applyFixedEntries(y, m);
+  return entries.filter(e=>e.ym===ymKey(y,m)); 
+}
 
 function activeTab(){ return [...document.querySelectorAll('.nav-item')].findIndex(t=>t.classList.contains('active')); }
 
@@ -70,7 +96,7 @@ function renderLists(){
     const sub = mes.filter(e=>e.tipo===tipo&&e.cat===cat);
     if(!sub.length){ el.innerHTML=`<div class="empty">Nenhum item em ${MESES[curMonth]}</div>`; return; }
     el.innerHTML = sub.map(e=>`
-      <div class="entry-item" onclick="del('${e.id}')">
+      <div class="entry-item" onclick="editEntry('${e.id}','${e.fixedId||''}')">
         <div class="eicon" style="background:${IBKG[e.icon]||'#F1EFE8'}">${e.icon}</div>
         <div class="einfo"><div class="ename">${escapeHtml(e.nome)}</div><div class="ecat"><span class="tag ${cat}">${catLbl(cat)}</span></div></div>
         <div class="eamt ${tipo==='entrada'?'pos':tipo==='investimento'?'neu':'neg'}">${tipo==='saida'?'− ':''}${fmt(e.valor)}</div>
@@ -192,20 +218,32 @@ function calcProj(){
   const taxa=parseFloat(document.getElementById('pj-taxa').value)||0;
   const dias=parseInt(document.getElementById('pj-per').value)||90;
   const tipo=document.getElementById('pj-tipo').value;
-  const meses=dias/30, t=taxa/100;
-  const final=tipo==='compostos'?cap*Math.pow(1+t,meses):cap*(1+t*meses);
-  const rend=final-cap;
+  
+  // Calcular dias úteis (excluindo feriados e fins de semana)
+  const startDate = new Date();
+  const endDate = new Date(startDate.getTime() + dias * 24 * 60 * 60 * 1000);
+  const businessDays = countBusinessDays(startDate, endDate);
+  const businessDaysPerYear = 252; // Média de dias úteis por ano no Brasil
+  const taxaAoAno = taxa / 100;
+  const diasUteisPeriodo = businessDays;
+  const diasUteisPorAno = businessDaysPerYear;
+  const periodoEmAnos = diasUteisPeriodo / diasUteisPorAno;
+  
+  const t = taxaAoAno;
+  const final = tipo==='compostos' ? cap*Math.pow(1+t, periodoEmAnos) : cap*(1+t*periodoEmAnos);
+  const rend = final - cap;
   document.getElementById('pj-res').innerHTML=`
     <div class="pr-item"><div class="pr-lbl">Capital</div><div class="pr-val">${fmt(cap)}</div></div>
     <div class="pr-item"><div class="pr-lbl">Rendimento</div><div class="pr-val pos">+${fmt(rend)}</div></div>
-    <div class="pr-item"><div class="pr-lbl">Total final</div><div class="pr-val">${fmt(final)}</div></div>`;
+    <div class="pr-item"><div class="pr-lbl">Total final</div><div class="pr-val">${fmt(final)}</div></div>
+    <div class="pr-item" style="grid-column:1/-1;font-size:10px;color:var(--text-secondary);margin-top:4px">Dias úteis: ${diasUteisPeriodo} de ${dias}</div>`;
 
-  const steps=Math.max(4,Math.round(meses<=3?meses*8:meses<=6?meses*4:meses*2));
+  const steps=Math.max(4,Math.round(periodoEmAnos<=0.25?periodoEmAnos*8:periodoEmAnos<=0.5?periodoEmAnos*4:periodoEmAnos*2));
   const lbls=[],data=[];
   for(let i=0;i<=steps;i++){
-    const m=(meses/steps)*i;
-    const v=tipo==='compostos'?cap*Math.pow(1+t,m):cap*(1+t*m);
-    lbls.push(i===0?'Hoje':+(m.toFixed(1))+'m');
+    const p=(periodoEmAnos/steps)*i;
+    const v=tipo==='compostos'?cap*Math.pow(1+t,p):cap*(1+t*p);
+    lbls.push(i===0?'Hoje':+(p.toFixed(2))+'a');
     data.push(parseFloat(v.toFixed(2)));
   }
   if(cProj){cProj.destroy();cProj=null;}
@@ -239,11 +277,12 @@ function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;',
 
 // ===== MODAL =====
 function openModal(tipo, cat){
-  mCtx={tipo,cat};
+  mCtx={tipo,cat,fixo:false};
   selIcon = tipo==='entrada'?'💰':tipo==='investimento'?'🏦':'📄';
   document.getElementById('modal-ttl').textContent = tipo==='entrada'?'Adicionar entrada':tipo==='investimento'?'Adicionar investimento':'Adicionar saída';
   document.getElementById('m-nome').value='';
   document.getElementById('m-valor').value='';
+  document.getElementById('m-fixo').checked=false;
   buildTipo(tipo); buildCat(tipo,cat); buildIcons();
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -267,12 +306,14 @@ function buildTipo(tipo){
 
 function buildCat(tipo,cat){
   const f=document.getElementById('m-cat-f');
-  if(tipo==='investimento'){f.style.display='none';return;}
+  const ff=document.getElementById('m-fixo-f');
+  if(tipo==='investimento'){f.style.display='none';ff.style.display='none';return;}
   f.style.display='block';
+  ff.style.display='block';
   const opts=tipo==='saida'
     ? [{v:'fixo',l:'Fixa'},{v:'variavel',l:'Variável'},{v:'cartao',l:'Cartão'}]
     : [{v:'fixo',l:'Fixa'},{v:'variavel',l:'Variável'}];
-  document.getElementById('m-cat-g').innerHTML=opts.map(o=>`<div class="rbtn ${o.v===cat?'sel':''}" onclick="selCat('${o.v}',this)">${o.l}</div>`).join('');
+  document.getElementById('m-cat-g').innerHTML=opts.map(o=>`<div class="rbtn ${o.v===cat?'sel':''} ${o.v==='saida'?'exp':''} " onclick="selCat('${o.v}',this)">${o.l}</div>`).join('');
 }
 
 function buildIcons(){
@@ -307,19 +348,54 @@ function closeOut(e){ if(e.target===document.getElementById('modal-overlay')) cl
 function saveEntry(){
   const nome=document.getElementById('m-nome').value.trim();
   const valor=parseFloat(document.getElementById('m-valor').value);
+  const isFixo=document.getElementById('m-fixo').checked;
   if(!nome||!valor||valor<=0){ document.getElementById('m-nome').focus(); return; }
   const inv = mCtx.tipo==='investimento';
-  entries.push({
-    id: Date.now()+'',
-    nome, valor,
-    tipo: mCtx.tipo,
-    cat: mCtx.cat,
-    icon: selIcon,
-    ym: inv ? 'global' : ymKey(curYear,curMonth)
-  });
+  const id = Date.now()+'';
+  
+  if(isFixo && !inv) {
+    fixedEntries.push({
+      id, nome, valor,
+      tipo: mCtx.tipo,
+      cat: mCtx.cat,
+      icon: selIcon,
+      createdYear: curYear,
+      createdMonth: curMonth
+    });
+    applyFixedEntries(curYear, curMonth);
+  } else {
+    entries.push({
+      id,
+      nome, valor,
+      tipo: mCtx.tipo,
+      cat: mCtx.cat,
+      icon: selIcon,
+      ym: inv ? 'global' : ymKey(curYear,curMonth)
+    });
+  }
   persist();
   renderAll();
   closeModal();
+}
+
+function editEntry(id, fixedId){
+  if(fixedId) {
+    const fe = fixedEntries.find(f => f.id === fixedId);
+    if(!fe) return;
+    const newVal = prompt('Novo valor para ' + fe.nome + ' (R$):', fe.valor);
+    if(newVal && !isNaN(parseFloat(newVal)) && parseFloat(newVal) > 0) {
+      fe.valor = parseFloat(newVal);
+      entries.forEach(e => {
+        if(e.fixedId === fixedId && e.ym === ymKey(curYear, curMonth)) {
+          e.valor = fe.valor;
+        }
+      });
+      persist();
+      renderAll();
+    }
+  } else {
+    del(id);
+  }
 }
 
 function del(id){
@@ -333,3 +409,52 @@ function del(id){
 // ===== INIT =====
 updateHeader();
 renderAll();
+
+
+// ===== CALCULO DE DIAS UTEIS =====
+function getEasterDate(year) {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+
+function isBrazilianHoliday(date) {
+  const d = date.getDate();
+  const m = date.getMonth() + 1;
+  const y = date.getFullYear();
+  const fixedHolidays = [[1,1],[4,21],[5,1],[9,7],[10,12],[11,2],[11,20],[12,25]];
+  for(let h of fixedHolidays) {
+    if(h[0] === m && h[1] === d) return true;
+  }
+  const easter = getEasterDate(y);
+  const easterTime = easter.getTime();
+  const currentTime = new Date(y, m - 1, d).getTime();
+  const daysDiff = Math.round((currentTime - easterTime) / (1000 * 60 * 60 * 24));
+  if(daysDiff === -2 || daysDiff === 60 || daysDiff === -47) return true;
+  return false;
+}
+
+function countBusinessDays(startDate, endDate) {
+  let count = 0;
+  const current = new Date(startDate);
+  while(current <= endDate) {
+    const dayOfWeek = current.getDay();
+    if(dayOfWeek !== 0 && dayOfWeek !== 6 && !isBrazilianHoliday(current)) {
+      count++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  return count;
+}

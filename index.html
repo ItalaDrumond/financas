@@ -15,13 +15,13 @@
 
 <style>
 :root{
-  --bg-tertiary:#F2F1ED;
-  --bg-primary:#FFFFFF;
-  --bg-secondary:#F7F6F3;
-  --border-tertiary:#E8E6E1;
-  --border-secondary:#DDDAD3;
-  --text-primary:#1A1A19;
-  --text-secondary:#8E8C85;
+  --bg-tertiary:#0F0F0F;
+  --bg-primary:#1A1A1A;
+  --bg-secondary:#252525;
+  --border-tertiary:#333333;
+  --border-secondary:#404040;
+  --text-primary:#E8E8E8;
+  --text-secondary:#A0A0A0;
   --radius-lg:16px;
   --radius-md:10px;
   --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -65,8 +65,8 @@ body{
 .mini{background:var(--bg-secondary);border-radius:var(--radius-md);padding:10px 12px;}
 .mini-lbl{font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:4px;}
 .mini-val{font-size:17px;font-weight:600;margin-top:3px;}
-.mini-val.pos{color:#1D9E75;}
-.mini-val.neg{color:#D85A30;}
+.mini-val.pos{color:#4ECDC4;}
+.mini-val.neg{color:#E8956F;}
 
 /* ENTRY LISTS */
 .entry-list{background:var(--bg-primary);border-radius:var(--radius-lg);border:0.5px solid var(--border-tertiary);overflow:hidden;}
@@ -78,14 +78,14 @@ body{
 .ename{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ecat{font-size:11px;color:var(--text-secondary);margin-top:1px;}
 .eamt{font-size:14px;font-weight:600;flex-shrink:0;}
-.eamt.pos{color:#1D9E75;}
-.eamt.neg{color:#D85A30;}
+.eamt.pos{color:#4ECDC4;}
+.eamt.neg{color:#E8956F;}
 .eamt.neu{color:var(--text-secondary);}
 .tag{font-size:10px;padding:1px 6px;border-radius:20px;}
-.tag.fixo{background:#E1F5EE;color:#0F6E56;}
-.tag.variavel{background:#FAEEDA;color:#633806;}
-.tag.cartao{background:#EEEDFE;color:#3C3489;}
-.tag.investimento{background:#E6F1FB;color:#185FA5;}
+.tag.fixo{background:#1B3A35;color:#4ECDC4;}
+.tag.variavel{background:#3A2F1B;color:#FFB84D;}
+.tag.cartao{background:#2B2540;color:#9D7FD9;}
+.tag.investimento{background:#1B2D3F;color:#5BA3D0;}
 
 .empty{text-align:center;padding:28px 16px;color:var(--text-secondary);font-size:13px;}
 .empty i{font-size:28px;display:block;margin-bottom:8px;opacity:.4;}
@@ -102,25 +102,28 @@ body{
 .ym-card{background:var(--bg-primary);border-radius:var(--radius-lg);border:0.5px solid var(--border-tertiary);padding:12px 14px;}
 .ym-lbl{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;}
 .ym-val{font-size:18px;font-weight:600;margin-top:3px;color:var(--text-primary);}
-.ym-val.pos{color:#1D9E75;}
-.ym-val.neg{color:#D85A30;}
+.ym-val.pos{color:#4ECDC4;}
+.ym-val.neg{color:#E8956F;}
 .months-list{margin:0 14px 14px;display:flex;flex-direction:column;gap:8px;}
 .month-row{background:var(--bg-primary);border-radius:var(--radius-lg);border:0.5px solid var(--border-tertiary);padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;}
 .month-row:active{background:var(--bg-secondary);}
 .month-badge{width:40px;height:40px;border-radius:var(--radius-md);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:600;}
-.month-badge.pos{background:#E1F5EE;color:#0F6E56;}
-.month-badge.neg{background:#FAECE7;color:#993C1D;}
+.month-badge.pos{background:#1B3A35;color:#4ECDC4;}
+.month-badge.neg{background:#3A2B1F;color:#E8956F;}
 .month-badge.zero{background:var(--bg-secondary);color:var(--text-secondary);}
 .month-info{flex:1;}
 .month-name{font-size:13px;font-weight:600;color:var(--text-primary);}
 .month-sub{font-size:11px;color:var(--text-secondary);margin-top:2px;}
 .month-saldo{font-size:14px;font-weight:600;}
+.month-saldo.pos{color:#4ECDC4;}
+.month-saldo.neg{color:#E8956F;}
 
 /* INVESTIMENTOS */
 .inv-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px;}
 .inv-card{background:var(--bg-primary);border-radius:var(--radius-lg);border:0.5px solid var(--border-tertiary);padding:12px 14px;}
 .inv-lbl{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;}
 .inv-val{font-size:18px;font-weight:600;margin-top:3px;}
+.inv-val.pos{color:#4ECDC4;}
 .proj-card{background:var(--bg-primary);border-radius:var(--radius-lg);border:0.5px solid var(--border-tertiary);padding:14px;margin:0 14px 14px;}
 .proj-title{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:5px;}
 .proj-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
@@ -130,7 +133,7 @@ body{
 .pr-item{background:var(--bg-secondary);border-radius:var(--radius-md);padding:8px;text-align:center;}
 .pr-lbl{font-size:10px;color:var(--text-secondary);}
 .pr-val{font-size:13px;font-weight:600;color:var(--text-primary);margin-top:2px;}
-.pr-val.pos{color:#1D9E75;}
+.pr-val.pos{color:#4ECDC4;}
 
 .add-btn{font-size:12px;padding:4px 10px;background:var(--bg-secondary);border:0.5px solid var(--border-secondary);border-radius:var(--radius-md);cursor:pointer;color:var(--text-secondary);display:flex;align-items:center;gap:4px;margin-left:auto;}
 
@@ -145,8 +148,8 @@ body{
 .field input,.field select{width:100%;padding:10px 12px;font-size:15px;background:var(--bg-secondary);border:0.5px solid var(--border-secondary);border-radius:var(--radius-md);color:var(--text-primary);}
 .radio-group{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .rbtn{padding:9px 6px;border-radius:var(--radius-md);border:0.5px solid var(--border-secondary);text-align:center;font-size:13px;cursor:pointer;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;gap:5px;}
-.rbtn.sel{border-color:#1D9E75;color:#0F6E56;background:#E1F5EE;}
-.rbtn.sel.exp{border-color:#D85A30;color:#993C1D;background:#FAECE7;}
+.rbtn.sel{border-color:#4ECDC4;color:#4ECDC4;background:#1B3A35;}
+.rbtn.sel.exp{border-color:#E8956F;color:#E8956F;background:#3A2B1F;}
 .btn-submit{width:100%;padding:13px;border-radius:var(--radius-lg);font-size:15px;font-weight:600;background:var(--text-primary);color:var(--bg-primary);border:none;cursor:pointer;margin-top:6px;}
 .btn-cancel{width:100%;padding:11px;font-size:13px;background:none;border:none;color:var(--text-secondary);cursor:pointer;margin-top:6px;}
 .icon-sel{display:flex;gap:6px;flex-wrap:wrap;}
@@ -158,7 +161,7 @@ body{
 .nav-item svg{width:21px;height:21px;}
 .nav-item.active{color:var(--text-primary);}
 
-.fab{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));right:calc(max(16px, (100% - 480px) / 2 + 16px));width:48px;height:48px;border-radius:50%;background:var(--text-primary);color:var(--bg-primary);border:none;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;z-index:50;box-shadow:0 2px 10px rgba(0,0,0,.18);}
+.fab{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));right:calc(max(16px, (100% - 480px) / 2 + 16px));width:48px;height:48px;border-radius:50%;background:#4ECDC4;color:#0F0F0F;border:none;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;z-index:50;box-shadow:0 2px 10px rgba(0,0,0,.45);}
 </style>
 </head>
 <body>
@@ -309,6 +312,7 @@ body{
     <div class="field"><label>Valor (R$)</label><input type="number" id="m-valor" placeholder="0,00" step="0.01" min="0" inputmode="decimal"></div>
     <div class="field" id="m-tipo-f"><label>Tipo</label><div class="radio-group" id="m-tipo-g"></div></div>
     <div class="field" id="m-cat-f"><label>Categoria</label><div class="radio-group" id="m-cat-g"></div></div>
+    <div class="field" id="m-fixo-f" style="display:none"><label style="display:flex;align-items:center;gap:8px;font-size:13px;text-transform:none;letter-spacing:0"><input type="checkbox" id="m-fixo" style="width:16px;height:16px;cursor:pointer"> Repetir automaticamente cada mês</label></div>
     <div class="field"><label>Ícone</label><div class="icon-sel" id="m-icons"></div></div>
     <button class="btn-submit" onclick="saveEntry()">Salvar</button>
     <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
