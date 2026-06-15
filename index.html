@@ -440,6 +440,150 @@
     </div>
   </div>
 
+  <!-- Adicione no NAV, após o botão de Investimentos -->
+<button class="nav-btn" data-tab="recurring">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+    <circle cx="12" cy="12" r="3"></circle>
+    <path d="M21 12v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6"></path>
+    <polyline points="16 8 22 8 22 14"></polyline>
+  </svg>
+  <span>Recorrentes</span>
+</button>
+
+<!-- Nova Tab de Recorrentes -->
+<section id="tab-recurring" class="tab-content">
+  <div class="tab-header-row">
+    <div class="section-title" style="margin:0">Transações Recorrentes</div>
+    <button class="add-btn" id="addRecurringBtn">+ Nova</button>
+  </div>
+  <div class="info-card" style="background:var(--surface); border-radius:var(--radius-sm); padding:12px 16px; margin-bottom:16px; display:flex; gap:10px; align-items:center;">
+    <div style="font-size:20px">🔄</div>
+    <div style="font-size:12px; color:var(--text2);">Transações fixas que se repetem automaticamente todo mês. Você pode ajustar valores específicos por mês clicando em 📝.</div>
+  </div>
+  <div id="recurringList" class="transaction-list"></div>
+</section>
+
+<!-- Modal de Recorrência -->
+<div id="recurringModal" class="modal hidden">
+  <div class="modal-backdrop" id="recurringBackdrop"></div>
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title" id="recurringModalTitle">Nova Recorrência</span>
+      <button class="modal-close" id="closeRecurring">✕</button>
+    </div>
+    <form id="recurringForm" class="modal-form">
+      <input type="hidden" id="recurringEditId">
+      <div class="form-group">
+        <label>Descrição</label>
+        <input type="text" id="recurringDesc" placeholder="Ex: Aluguel, Salário, Internet..." required>
+      </div>
+      <div class="form-group">
+        <label>Valor (R$)</label>
+        <input type="text" id="recurringAmount" placeholder="0,00" inputmode="decimal" required>
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="recurringType" required>
+          <option value="income">💰 Entrada (Receita)</option>
+          <option value="expense">💸 Saída (Despesa)</option>
+        </select>
+      </div>
+      <div class="form-group" id="recurringIncomeGroup">
+        <label>Classificação da Entrada</label>
+        <select id="recurringIncomeType">
+          <option value="fixed">Fixo (ex: Salário)</option>
+          <option value="variable">Variável (ex: Bônus)</option>
+        </select>
+      </div>
+      <div class="form-group" id="recurringExpenseGroup" style="display:none">
+        <label>Classificação da Saída</label>
+        <select id="recurringExpenseType">
+          <option value="fixed">Fixo (ex: Aluguel)</option>
+          <option value="variable">Variável (ex: Mercado)</option>
+          <option value="credit">Cartão de Crédito</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Dia do mês</label>
+        <input type="number" id="recurringDay" min="1" max="31" value="1" required>
+      </div>
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="recurringCategory" required>
+          <optgroup label="Entradas">
+            <option value="salary">Salário</option>
+            <option value="freelance">Freelance</option>
+            <option value="rent">Aluguel recebido</option>
+            <option value="investment">Rendimento</option>
+          </optgroup>
+          <optgroup label="Saídas">
+            <option value="housing">Moradia</option>
+            <option value="food">Alimentação</option>
+            <option value="transport">Transporte</option>
+            <option value="utilities">Contas/Serviços</option>
+            <option value="education">Educação</option>
+            <option value="health">Saúde</option>
+            <option value="leisure">Lazer</option>
+          </optgroup>
+          <option value="other">Outros</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Data de início (opcional)</label>
+        <input type="date" id="recurringStartDate">
+      </div>
+      <div class="form-group">
+        <label>Data de término (opcional)</label>
+        <input type="date" id="recurringEndDate">
+      </div>
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="recurringActive" checked style="width:auto;">
+          Ativo
+        </label>
+      </div>
+      <button type="submit" class="submit-btn">Salvar</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de Sobrescrita Mensal -->
+<div id="overrideModal" class="modal hidden">
+  <div class="modal-backdrop" id="overrideBackdrop"></div>
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title">Ajustar para este mês</span>
+      <button class="modal-close" id="closeOverride">✕</button>
+    </div>
+    <div class="modal-form">
+      <div class="info-card" style="background:var(--surface3); border-radius:12px; padding:12px; margin-bottom:16px; text-align:center;">
+        <div style="font-size:12px; color:var(--text3)">Ajustando para</div>
+        <div style="font-size:16px; font-weight:600" id="overrideMonthDisplay"></div>
+        <div style="font-size:13px; margin-top:4px" id="overrideRuleDesc"></div>
+      </div>
+      <div class="form-group">
+        <label>Valor para este mês (R$)</label>
+        <input type="text" id="overrideAmount" placeholder="0,00" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="overrideActive" checked style="width:auto;">
+          Incluir este mês
+        </label>
+      </div>
+      <div style="display:flex; gap:12px; margin-top:16px;">
+        <button type="button" class="cancel-btn" onclick="closeModal('overrideModal')">Cancelar</button>
+        <button type="button" class="delete-btn" onclick="removeOverride()">Remover ajuste</button>
+        <button type="button" class="submit-btn" onclick="saveOverride()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
   <!-- Confirm delete modal -->
   <div id="confirmModal" class="modal hidden">
     <div class="modal-backdrop" id="confirmBackdrop"></div>
