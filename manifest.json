@@ -1,26 +1,25 @@
 {
-  "name": "Minha Grana",
-  "short_name": "Grana",
-  "description": "Controle financeiro pessoal",
-  "start_url": "/financas/",
+  "name": "Minhas Finanças",
+  "short_name": "Finanças",
+  "description": "Controle financeiro pessoal: entradas, saídas, visão mensal/anual e investimentos.",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
   "orientation": "portrait",
+  "background_color": "#F2F1ED",
+  "theme_color": "#0B0B0C",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icon-512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "categories": ["finance", "productivity"],
-  "lang": "pt-BR"
+  ]
 }

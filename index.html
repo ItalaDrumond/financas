@@ -2,607 +2,327 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Minhas Finanças</title>
+
+<!-- PWA / iOS -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0B0B0C">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Minha Grana">
-<meta name="theme-color" content="#0f172a">
-<title>Minha Grana</title>
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="style.css">
+<meta name="apple-mobile-web-app-title" content="Finanças">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<style>
+:root{
+  --bg-tertiary:#F2F1ED;
+  --bg-primary:#FFFFFF;
+  --bg-secondary:#F7F6F3;
+  --border-tertiary:#E8E6E1;
+  --border-secondary:#DDDAD3;
+  --text-primary:#1A1A19;
+  --text-secondary:#8E8C85;
+  --radius-lg:16px;
+  --radius-md:10px;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  font-family:var(--font-sans);
+  background:var(--bg-tertiary);
+  color:var(--text-primary);
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior:none;
+}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+.app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg-tertiary);display:flex;flex-direction:column;position:relative;}
+
+/* HEADER */
+.header{background:var(--bg-primary);border-bottom:0.5px solid var(--border-tertiary);padding:calc(14px + env(safe-area-inset-top)) 16px 12px;position:sticky;top:0;z-index:40;}
+.header-row{display:flex;align-items:center;justify-content:space-between;}
+.header-title{font-size:20px;font-weight:600;color:var(--text-primary);}
+.header-sub{font-size:12px;color:var(--text-secondary);}
+.month-nav{display:flex;align-items:center;gap:8px;margin-top:10px;}
+.month-nav button{background:var(--bg-secondary);border:0.5px solid var(--border-secondary);border-radius:var(--radius-md);width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-primary);font-size:16px;flex-shrink:0;}
+.month-label{flex:1;text-align:center;font-size:15px;font-weight:500;color:var(--text-primary);}
+.month-label span{font-size:12px;color:var(--text-secondary);font-weight:400;margin-left:4px;}
+
+/* CONTENT */
+.content{flex:1;padding-bottom:calc(76px + env(safe-area-inset-bottom));overflow-y:auto;}
+.page{display:none;}
+.page.active{display:block;}
+.section{margin:14px;}
+.sec-title{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+
+/* CARDS */
+.balance-card{margin:14px;background:var(--bg-primary);border-radius:var(--radius-lg);border:0.5px solid var(--border-tertiary);padding:18px;}
+.bal-label{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em;}
+.bal-value{font-size:30px;font-weight:600;color:var(--text-primary);margin:4px 0 14px;}
+.bal-value.positive{color:#1D9E75;}
+.bal-value.negative{color:#D85A30;}
+.bal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mini{background:var(--bg-secondary);border-radius:var(--radius-md);padding:10px 12px;}
+.mini-lbl{font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:4px;}
+.mini-val{font-size:17px;font-weight:600;margin-top:3px;}
+.mini-val.pos{color:#1D9E75;}
+.mini-val.neg{color:#D85A30;}
+
+/* ENTRY LISTS */
+.entry-list{background:var(--bg-primary);border-radius:var(--radius-lg);border:0.5px solid var(--border-tertiary);overflow:hidden;}
+.entry-item{display:flex;align-items:center;padding:11px 14px;border-bottom:0.5px solid var(--border-tertiary);gap:10px;cursor:pointer;}
+.entry-item:last-child{border-bottom:none;}
+.entry-item:active{background:var(--bg-secondary);}
+.eicon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.einfo{flex:1;min-width:0;}
+.ename{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ecat{font-size:11px;color:var(--text-secondary);margin-top:1px;}
+.eamt{font-size:14px;font-weight:600;flex-shrink:0;}
+.eamt.pos{color:#1D9E75;}
+.eamt.neg{color:#D85A30;}
+.eamt.neu{color:var(--text-secondary);}
+.tag{font-size:10px;padding:1px 6px;border-radius:20px;}
+.tag.fixo{background:#E1F5EE;color:#0F6E56;}
+.tag.variavel{background:#FAEEDA;color:#633806;}
+.tag.cartao{background:#EEEDFE;color:#3C3489;}
+.tag.investimento{background:#E6F1FB;color:#185FA5;}
+
+.empty{text-align:center;padding:28px 16px;color:var(--text-secondary);font-size:13px;}
+.empty i{font-size:28px;display:block;margin-bottom:8px;opacity:.4;}
+
+/* CHARTS */
+.chart-wrap{background:var(--bg-primary);border-radius:var(--radius-lg);border:0.5px solid var(--border-tertiary);padding:14px;margin:0 14px 14px;}
+.chart-title{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:10px;display:flex;align-items:center;gap:5px;}
+.legend-row{display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-secondary);}
+.legend-dot{width:10px;height:10px;border-radius:2px;}
+
+/* ANUAL */
+.year-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px;}
+.ym-card{background:var(--bg-primary);border-radius:var(--radius-lg);border:0.5px solid var(--border-tertiary);padding:12px 14px;}
+.ym-lbl{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;}
+.ym-val{font-size:18px;font-weight:600;margin-top:3px;color:var(--text-primary);}
+.ym-val.pos{color:#1D9E75;}
+.ym-val.neg{color:#D85A30;}
+.months-list{margin:0 14px 14px;display:flex;flex-direction:column;gap:8px;}
+.month-row{background:var(--bg-primary);border-radius:var(--radius-lg);border:0.5px solid var(--border-tertiary);padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.month-row:active{background:var(--bg-secondary);}
+.month-badge{width:40px;height:40px;border-radius:var(--radius-md);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:600;}
+.month-badge.pos{background:#E1F5EE;color:#0F6E56;}
+.month-badge.neg{background:#FAECE7;color:#993C1D;}
+.month-badge.zero{background:var(--bg-secondary);color:var(--text-secondary);}
+.month-info{flex:1;}
+.month-name{font-size:13px;font-weight:600;color:var(--text-primary);}
+.month-sub{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+.month-saldo{font-size:14px;font-weight:600;}
+
+/* INVESTIMENTOS */
+.inv-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px;}
+.inv-card{background:var(--bg-primary);border-radius:var(--radius-lg);border:0.5px solid var(--border-tertiary);padding:12px 14px;}
+.inv-lbl{font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;}
+.inv-val{font-size:18px;font-weight:600;margin-top:3px;}
+.proj-card{background:var(--bg-primary);border-radius:var(--radius-lg);border:0.5px solid var(--border-tertiary);padding:14px;margin:0 14px 14px;}
+.proj-title{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:5px;}
+.proj-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.pf label{font-size:11px;color:var(--text-secondary);display:block;margin-bottom:3px;}
+.pf input,.pf select{width:100%;padding:8px 10px;font-size:13px;background:var(--bg-secondary);border:0.5px solid var(--border-secondary);border-radius:var(--radius-md);color:var(--text-primary);}
+.proj-res{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+.pr-item{background:var(--bg-secondary);border-radius:var(--radius-md);padding:8px;text-align:center;}
+.pr-lbl{font-size:10px;color:var(--text-secondary);}
+.pr-val{font-size:13px;font-weight:600;color:var(--text-primary);margin-top:2px;}
+.pr-val.pos{color:#1D9E75;}
+
+.add-btn{font-size:12px;padding:4px 10px;background:var(--bg-secondary);border:0.5px solid var(--border-secondary);border-radius:var(--radius-md);cursor:pointer;color:var(--text-secondary);display:flex;align-items:center;gap:4px;margin-left:auto;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:flex-end;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg-primary);border-radius:20px 20px 0 0;padding:20px 18px calc(36px + env(safe-area-inset-bottom));width:100%;max-height:88vh;overflow-y:auto;}
+.modal-handle{width:34px;height:4px;background:var(--border-secondary);border-radius:2px;margin:0 auto 18px;}
+.modal-title{font-size:17px;font-weight:600;margin-bottom:18px;color:var(--text-primary);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:11px;color:var(--text-secondary);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em;}
+.field input,.field select{width:100%;padding:10px 12px;font-size:15px;background:var(--bg-secondary);border:0.5px solid var(--border-secondary);border-radius:var(--radius-md);color:var(--text-primary);}
+.radio-group{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.rbtn{padding:9px 6px;border-radius:var(--radius-md);border:0.5px solid var(--border-secondary);text-align:center;font-size:13px;cursor:pointer;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;gap:5px;}
+.rbtn.sel{border-color:#1D9E75;color:#0F6E56;background:#E1F5EE;}
+.rbtn.sel.exp{border-color:#D85A30;color:#993C1D;background:#FAECE7;}
+.btn-submit{width:100%;padding:13px;border-radius:var(--radius-lg);font-size:15px;font-weight:600;background:var(--text-primary);color:var(--bg-primary);border:none;cursor:pointer;margin-top:6px;}
+.btn-cancel{width:100%;padding:11px;font-size:13px;background:none;border:none;color:var(--text-secondary);cursor:pointer;margin-top:6px;}
+.icon-sel{display:flex;gap:6px;flex-wrap:wrap;}
+.iopt{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid transparent;}
+
+/* NAV BAR */
+.nav-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg-primary);border-top:0.5px solid var(--border-tertiary);display:flex;padding:6px 4px calc(10px + env(safe-area-inset-bottom));z-index:60;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 2px;border-radius:var(--radius-md);color:var(--text-secondary);font-size:10px;background:none;border:none;font-family:inherit;}
+.nav-item svg{width:21px;height:21px;}
+.nav-item.active{color:var(--text-primary);}
+
+.fab{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));right:calc(max(16px, (100% - 480px) / 2 + 16px));width:48px;height:48px;border-radius:50%;background:var(--text-primary);color:var(--bg-primary);border:none;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;z-index:50;box-shadow:0 2px 10px rgba(0,0,0,.18);}
+</style>
 </head>
 <body>
-<div id="app">
-  <!-- Header -->
-  <header id="header">
-    <div class="header-top">
-      <div class="header-left">
-        <span class="app-logo">₿</span>
-        <div class="app-title">Minha Grana</div>
-      </div>
-      <div class="header-month-badge" id="currentMonthLabel">Junho 2025</div>
-    </div>
-    <div class="header-nav">
-      <button class="month-nav-btn" id="prevMonthBtn" aria-label="Mês anterior">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <div class="header-month-display" id="currentMonthDisplay">
-        <span class="header-month-name">Junho</span>
-        <span class="header-month-year">2025</span>
-      </div>
-      <button class="month-nav-btn" id="nextMonthBtn" aria-label="Próximo mês">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-    </div>
-  </header>
 
-  <!-- Month Picker Modal -->
-  <div id="monthPickerModal" class="modal hidden">
-    <div class="modal-backdrop" id="monthPickerBackdrop"></div>
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <span class="modal-title">Escolher período</span>
-        <button class="modal-close" id="closeMonthPicker">✕</button>
-      </div>
-      <div class="month-picker-grid" id="monthPickerGrid"></div>
+<div class="app">
+  <div class="header">
+    <div class="header-row">
+      <div class="header-title">Minhas Finanças</div>
+      <div class="header-sub" id="hdr-sub">Junho 2026</div>
+    </div>
+    <div class="month-nav" id="month-nav">
+      <button onclick="prevMonth()" aria-label="Mês anterior">‹</button>
+      <div class="month-label" id="month-label">Junho <span>2026</span></div>
+      <button onclick="nextMonth()" aria-label="Próximo mês">›</button>
     </div>
   </div>
 
-  <!-- Nav Tabs -->
-  <nav id="nav">
-    <button class="nav-btn active" data-tab="dashboard">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      <span>Início</span>
-    </button>
-    <button class="nav-btn" data-tab="income">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-      <span>Entradas</span>
-    </button>
-    <button class="nav-btn" data-tab="expenses">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
-      <span>Saídas</span>
-    </button>
-    <button class="nav-btn" data-tab="investments">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-      <span>Invest.</span>
-    </button>
-    <button class="nav-btn" data-tab="annual">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      <span>Anual</span>
-    </button>
-  </nav>
+  <div class="content">
 
-  <!-- Content Area -->
-  <main id="content">
-    <!-- DASHBOARD TAB -->
-    <section id="tab-dashboard" class="tab-content active">
-      <div class="section-cards">
-        <div class="balance-card">
-          <div class="balance-label">Saldo do mês</div>
-          <div class="balance-value" id="dashBalance">R$ 0,00</div>
-          <div class="balance-sub" id="dashBalanceSub">+R$ 0,00 entradas · -R$ 0,00 saídas</div>
+    <!-- RESUMO -->
+    <div class="page active" id="page0">
+      <div class="balance-card">
+        <div class="bal-label">Saldo do mês</div>
+        <div class="bal-value" id="saldo-mes">R$ 0,00</div>
+        <div class="bal-row">
+          <div class="mini"><div class="mini-lbl">Entradas</div><div class="mini-val pos" id="res-ent">R$ 0,00</div></div>
+          <div class="mini"><div class="mini-lbl">Saídas</div><div class="mini-val neg" id="res-sai">R$ 0,00</div></div>
         </div>
       </div>
-
-      <div class="summary-row">
-        <div class="summary-card income-card">
-          <div class="summary-icon">↑</div>
-          <div>
-            <div class="summary-label">Entradas</div>
-            <div class="summary-value" id="dashIncome">R$ 0,00</div>
-          </div>
-        </div>
-        <div class="summary-card expense-card">
-          <div class="summary-icon">↓</div>
-          <div>
-            <div class="summary-label">Saídas</div>
-            <div class="summary-value" id="dashExpenses">R$ 0,00</div>
-          </div>
-        </div>
+      <div class="chart-wrap">
+        <div class="chart-title">Distribuição das saídas</div>
+        <div style="position:relative;width:100%;height:190px"><canvas id="cMes" role="img" aria-label="Gráfico de rosca com distribuição de saídas"></canvas></div>
       </div>
-
-      <div class="section-title">Distribuição de Gastos</div>
-      <div class="chart-card">
-        <canvas id="dashPieChart" height="220"></canvas>
-        <div id="dashPieLegend" class="pie-legend"></div>
+      <div class="section">
+        <div class="sec-title">Últimos lançamentos</div>
+        <div class="entry-list" id="list-recent"></div>
       </div>
-
-      <div class="section-title">Últimas Transações</div>
-      <div id="recentTransactions" class="transaction-list"></div>
-    </section>
-
-    <!-- INCOME TAB -->
-    <section id="tab-income" class="tab-content">
-      <div class="tab-header-row">
-        <div class="section-title" style="margin:0">Entradas</div>
-        <button class="add-btn" id="addIncomeBtn">+ Adicionar</button>
-      </div>
-
-      <div class="filter-pills">
-        <button class="pill active" data-filter="all">Todas</button>
-        <button class="pill" data-filter="fixed">Fixas</button>
-        <button class="pill" data-filter="variable">Variáveis</button>
-      </div>
-
-      <div class="summary-row" style="margin-bottom:16px">
-        <div class="summary-card income-card">
-          <div class="summary-icon">≡</div>
-          <div>
-            <div class="summary-label">Fixas</div>
-            <div class="summary-value" id="fixedIncomeTotal">R$ 0,00</div>
-          </div>
-        </div>
-        <div class="summary-card" style="border-color:#4ade80">
-          <div class="summary-icon" style="color:#4ade80">+</div>
-          <div>
-            <div class="summary-label">Variáveis</div>
-            <div class="summary-value" id="varIncomeTotal">R$ 0,00</div>
-          </div>
-        </div>
-      </div>
-
-      <div id="incomeList" class="transaction-list"></div>
-    </section>
-
-    <!-- EXPENSES TAB -->
-    <section id="tab-expenses" class="tab-content">
-      <div class="tab-header-row">
-        <div class="section-title" style="margin:0">Saídas</div>
-        <button class="add-btn" id="addExpenseBtn">+ Adicionar</button>
-      </div>
-
-      <div class="filter-pills">
-        <button class="pill active" data-filter="all">Todas</button>
-        <button class="pill" data-filter="fixed">Fixas</button>
-        <button class="pill" data-filter="variable">Variáveis</button>
-        <button class="pill" data-filter="credit">Cartão</button>
-      </div>
-
-      <div class="expense-summary-grid">
-        <div class="summary-card expense-card">
-          <div class="summary-icon">≡</div>
-          <div>
-            <div class="summary-label">Fixas</div>
-            <div class="summary-value" id="fixedExpTotal">R$ 0,00</div>
-          </div>
-        </div>
-        <div class="summary-card" style="border-color:#f87171">
-          <div class="summary-icon" style="color:#f87171">~</div>
-          <div>
-            <div class="summary-label">Variáveis</div>
-            <div class="summary-value" id="varExpTotal">R$ 0,00</div>
-          </div>
-        </div>
-        <div class="summary-card" style="border-color:#a78bfa; grid-column: 1/-1">
-          <div class="summary-icon" style="color:#a78bfa">💳</div>
-          <div>
-            <div class="summary-label">Cartão de Crédito</div>
-            <div class="summary-value" id="creditExpTotal">R$ 0,00</div>
-          </div>
-        </div>
-      </div>
-
-      <div id="expenseList" class="transaction-list"></div>
-    </section>
-
-    <!-- INVESTMENTS TAB -->
-    <section id="tab-investments" class="tab-content">
-      <div class="tab-header-row">
-        <div class="section-title" style="margin:0">Investimentos</div>
-        <button class="add-btn" id="addInvestmentBtn">+ Adicionar</button>
-      </div>
-
-      <div class="summary-row">
-        <div class="summary-card" style="border-color:#38bdf8">
-          <div class="summary-icon" style="color:#38bdf8">Σ</div>
-          <div>
-            <div class="summary-label">Total investido</div>
-            <div class="summary-value" id="investTotal">R$ 0,00</div>
-          </div>
-        </div>
-        <div class="summary-card" style="border-color:#4ade80">
-          <div class="summary-icon" style="color:#4ade80">%</div>
-          <div>
-            <div class="summary-label">Rendimento hoje</div>
-            <div class="summary-value" id="investYield">R$ 0,00</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Projection Tool -->
-      <div class="invest-proj-card">
-        <div class="proj-title">Simulador de Projeção</div>
-        <div class="proj-form">
-          <div class="proj-row">
-            <label>Valor inicial</label>
-            <input type="text" id="projAmount" placeholder="R$ 0,00" inputmode="decimal">
-          </div>
-          <div class="proj-row">
-            <label>Taxa anual (%)</label>
-            <input type="number" id="projRate" value="12.65" step="0.01" min="0">
-          </div>
-          <div class="proj-row">
-            <label>Período</label>
-            <div class="proj-period-btns">
-              <button class="period-btn active" data-days="30">30d</button>
-              <button class="period-btn" data-days="60">60d</button>
-              <button class="period-btn" data-days="90">90d</button>
-              <button class="period-btn" data-days="180">6m</button>
-              <button class="period-btn" data-days="365">1a</button>
-            </div>
-          </div>
-        </div>
-        <div class="proj-result" id="projResult">
-          <div class="proj-result-row">
-            <span>Dias úteis</span><strong id="projWorkdays">—</strong>
-          </div>
-          <div class="proj-result-row">
-            <span>Rendimento</span><strong id="projYield" class="text-green">—</strong>
-          </div>
-          <div class="proj-result-row total-row">
-            <span>Total final</span><strong id="projTotal">—</strong>
-          </div>
-        </div>
-        <div class="chart-card" style="margin-top:12px;padding:12px">
-          <canvas id="projChart" height="180"></canvas>
-        </div>
-      </div>
-
-      <div class="section-title">Carteira</div>
-      <div id="investmentList" class="transaction-list"></div>
-
-      <div class="section-title">Distribuição</div>
-      <div class="chart-card">
-        <canvas id="investPieChart" height="200"></canvas>
-        <div id="investPieLegend" class="pie-legend"></div>
-      </div>
-    </section>
-
-    <!-- ANNUAL TAB -->
-    <section id="tab-annual" class="tab-content">
-      <div class="section-title">Visão Anual <span id="annualYear">2025</span></div>
-
-      <div class="summary-row">
-        <div class="summary-card income-card">
-          <div class="summary-icon">↑</div>
-          <div>
-            <div class="summary-label">Total entradas</div>
-            <div class="summary-value" id="annualIncome">R$ 0,00</div>
-          </div>
-        </div>
-        <div class="summary-card expense-card">
-          <div class="summary-icon">↓</div>
-          <div>
-            <div class="summary-label">Total saídas</div>
-            <div class="summary-value" id="annualExpenses">R$ 0,00</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="chart-card">
-        <canvas id="annualBarChart" height="260"></canvas>
-      </div>
-
-      <div class="section-title">Saldo por mês</div>
-      <div id="monthlyBalanceList" class="transaction-list"></div>
-    </section>
-  </main>
-
-  <!-- FAB -->
-  <button class="fab hidden" id="fab">+</button>
-
-  <!-- Add Income Modal -->
-  <div id="incomeModal" class="modal hidden">
-    <div class="modal-backdrop" id="incomeBackdrop"></div>
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <span class="modal-title" id="incomeModalTitle">Nova Entrada</span>
-        <button class="modal-close" id="closeIncome">✕</button>
-      </div>
-      <form id="incomeForm" class="modal-form">
-        <input type="hidden" id="incomeEditId">
-        <div class="form-group">
-          <label>Descrição</label>
-          <input type="text" id="incomeDesc" placeholder="Ex: Salário, Freelance..." required>
-        </div>
-        <div class="form-group">
-          <label>Valor (R$)</label>
-          <input type="text" id="incomeValue" placeholder="0,00" inputmode="decimal" required>
-        </div>
-        <div class="form-group">
-          <label>Tipo</label>
-          <select id="incomeType">
-            <option value="fixed">Fixo</option>
-            <option value="variable">Variável</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Data</label>
-          <input type="date" id="incomeDate" required>
-        </div>
-        <div class="form-group">
-          <label>Categoria</label>
-          <select id="incomeCategory">
-            <option value="salary">Salário</option>
-            <option value="freelance">Freelance</option>
-            <option value="rent">Aluguel recebido</option>
-            <option value="investment">Rendimento</option>
-            <option value="other">Outros</option>
-          </select>
-        </div>
-        <button type="submit" class="submit-btn">Salvar</button>
-      </form>
     </div>
-  </div>
 
-  <!-- Add Expense Modal -->
-  <div id="expenseModal" class="modal hidden">
-    <div class="modal-backdrop" id="expenseBackdrop"></div>
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <span class="modal-title" id="expenseModalTitle">Nova Saída</span>
-        <button class="modal-close" id="closeExpense">✕</button>
+    <!-- ENTRADAS -->
+    <div class="page" id="page1">
+      <div class="section">
+        <div class="sec-title">Entradas fixas<button class="add-btn" onclick="openModal('entrada','fixo')">+ Adicionar</button></div>
+        <div class="entry-list" id="list-entrada-fixo"></div>
       </div>
-      <form id="expenseForm" class="modal-form">
-        <input type="hidden" id="expenseEditId">
-        <div class="form-group">
-          <label>Descrição</label>
-          <input type="text" id="expenseDesc" placeholder="Ex: Aluguel, Supermercado..." required>
-        </div>
-        <div class="form-group">
-          <label>Valor (R$)</label>
-          <input type="text" id="expenseValue" placeholder="0,00" inputmode="decimal" required>
-        </div>
-        <div class="form-group">
-          <label>Tipo</label>
-          <select id="expenseType">
-            <option value="fixed">Fixo</option>
-            <option value="variable">Variável</option>
-            <option value="credit">Cartão de Crédito</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Data</label>
-          <input type="date" id="expenseDate" required>
-        </div>
-        <div class="form-group">
-          <label>Categoria</label>
-          <select id="expenseCategory">
-            <option value="housing">Moradia</option>
-            <option value="food">Alimentação</option>
-            <option value="transport">Transporte</option>
-            <option value="health">Saúde</option>
-            <option value="education">Educação</option>
-            <option value="leisure">Lazer</option>
-            <option value="utilities">Contas/Serviços</option>
-            <option value="clothing">Vestuário</option>
-            <option value="other">Outros</option>
-          </select>
-        </div>
-        <button type="submit" class="submit-btn">Salvar</button>
-      </form>
+      <div class="section">
+        <div class="sec-title">Outros recebidos<button class="add-btn" onclick="openModal('entrada','variavel')">+ Adicionar</button></div>
+        <div class="entry-list" id="list-entrada-variavel"></div>
+      </div>
     </div>
-  </div>
 
-  <!-- Add Investment Modal -->
-  <div id="investmentModal" class="modal hidden">
-    <div class="modal-backdrop" id="investmentBackdrop"></div>
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <span class="modal-title" id="investmentModalTitle">Novo Investimento</span>
-        <button class="modal-close" id="closeInvestment">✕</button>
+    <!-- SAÍDAS -->
+    <div class="page" id="page2">
+      <div class="section">
+        <div class="sec-title">Contas fixas<button class="add-btn" onclick="openModal('saida','fixo')">+ Adicionar</button></div>
+        <div class="entry-list" id="list-saida-fixo"></div>
       </div>
-      <form id="investmentForm" class="modal-form">
-        <input type="hidden" id="investEditId">
-        <div class="form-group">
-          <label>Nome</label>
-          <input type="text" id="investName" placeholder="Ex: Caixinha Nubank, CDB, PETR4..." required>
-        </div>
-        <div class="form-group">
-          <label>Tipo</label>
-          <select id="investType">
-            <option value="cdi">Renda Fixa (CDI/CDB)</option>
-            <option value="savings">Poupança</option>
-            <option value="selic">Tesouro Selic</option>
-            <option value="ipca">Tesouro IPCA+</option>
-            <option value="stocks">Ações</option>
-            <option value="fiis">FIIs</option>
-            <option value="crypto">Criptomoedas</option>
-            <option value="other">Outro</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Valor investido (R$)</label>
-          <input type="text" id="investAmount" placeholder="0,00" inputmode="decimal" required>
-        </div>
-        <div class="form-group">
-          <label>Data de início</label>
-          <input type="date" id="investDate" required>
-        </div>
-        <div class="form-group" id="investRateGroup">
-          <label>Taxa anual (% a.a.)</label>
-          <input type="number" id="investRate" placeholder="12.65" step="0.01" min="0" value="12.65">
-          <small class="form-hint">Nubank: ~13% a.a. | CDB 100% CDI: ~12.65% a.a.</small>
-        </div>
-        <div class="form-group" id="investCdiGroup">
-          <label>% do CDI</label>
-          <input type="number" id="investCdiPct" placeholder="100" step="0.1" min="0" value="100">
-        </div>
-        <button type="submit" class="submit-btn">Salvar</button>
-      </form>
+      <div class="section">
+        <div class="sec-title">Gastos variáveis<button class="add-btn" onclick="openModal('saida','variavel')">+ Adicionar</button></div>
+        <div class="entry-list" id="list-saida-variavel"></div>
+      </div>
+      <div class="section">
+        <div class="sec-title">Cartão de crédito<button class="add-btn" onclick="openModal('saida','cartao')">+ Adicionar</button></div>
+        <div class="entry-list" id="list-saida-cartao"></div>
+      </div>
     </div>
-  </div>
 
-  <!-- Adicione no NAV, após o botão de Investimentos -->
-<button class="nav-btn" data-tab="recurring">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-    <circle cx="12" cy="12" r="3"></circle>
-    <path d="M21 12v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6"></path>
-    <polyline points="16 8 22 8 22 14"></polyline>
-  </svg>
-  <span>Recorrentes</span>
-</button>
-
-<!-- Nova Tab de Recorrentes -->
-<section id="tab-recurring" class="tab-content">
-  <div class="tab-header-row">
-    <div class="section-title" style="margin:0">Transações Recorrentes</div>
-    <button class="add-btn" id="addRecurringBtn">+ Nova</button>
-  </div>
-  <div class="info-card" style="background:var(--surface); border-radius:var(--radius-sm); padding:12px 16px; margin-bottom:16px; display:flex; gap:10px; align-items:center;">
-    <div style="font-size:20px">🔄</div>
-    <div style="font-size:12px; color:var(--text2);">Transações fixas que se repetem automaticamente todo mês. Você pode ajustar valores específicos por mês clicando em 📝.</div>
-  </div>
-  <div id="recurringList" class="transaction-list"></div>
-</section>
-
-<!-- Modal de Recorrência -->
-<div id="recurringModal" class="modal hidden">
-  <div class="modal-backdrop" id="recurringBackdrop"></div>
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-header">
-      <span class="modal-title" id="recurringModalTitle">Nova Recorrência</span>
-      <button class="modal-close" id="closeRecurring">✕</button>
+    <!-- ANUAL -->
+    <div class="page" id="page3">
+      <div class="year-metrics">
+        <div class="ym-card"><div class="ym-lbl">Total entradas</div><div class="ym-val pos" id="ano-ent">R$ 0</div></div>
+        <div class="ym-card"><div class="ym-lbl">Total saídas</div><div class="ym-val neg" id="ano-sai">R$ 0</div></div>
+        <div class="ym-card"><div class="ym-lbl">Saldo anual</div><div class="ym-val" id="ano-sal">R$ 0</div></div>
+        <div class="ym-card"><div class="ym-lbl">Melhor mês</div><div class="ym-val" id="ano-best" style="font-size:14px">—</div></div>
+      </div>
+      <div class="chart-wrap" style="margin:0 14px 14px">
+        <div class="chart-title">Entradas e saídas — <span id="ano-lbl" style="color:var(--text-secondary)">2026</span></div>
+        <div class="legend-row">
+          <div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div>Entradas</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#D85A30"></div>Saídas</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#378ADD"></div>Saldo</div>
+        </div>
+        <div style="position:relative;width:100%;height:220px"><canvas id="cAnual" role="img" aria-label="Gráfico de barras mensais do ano"></canvas></div>
+      </div>
+      <div class="months-list" id="months-list"></div>
     </div>
-    <form id="recurringForm" class="modal-form">
-      <input type="hidden" id="recurringEditId">
-      <div class="form-group">
-        <label>Descrição</label>
-        <input type="text" id="recurringDesc" placeholder="Ex: Aluguel, Salário, Internet..." required>
+
+    <!-- INVESTIMENTOS -->
+    <div class="page" id="page4">
+      <div class="inv-metrics">
+        <div class="inv-card"><div class="inv-lbl">Patrimônio</div><div class="inv-val" id="inv-total" style="color:var(--text-primary)">R$ 0,00</div></div>
+        <div class="inv-card"><div class="inv-lbl">Rend. est. /mês</div><div class="inv-val pos" id="inv-rend">+ R$ 0,00</div></div>
       </div>
-      <div class="form-group">
-        <label>Valor (R$)</label>
-        <input type="text" id="recurringAmount" placeholder="0,00" inputmode="decimal" required>
+      <div class="proj-card">
+        <div class="proj-title">Projeção de rendimentos</div>
+        <div class="proj-grid">
+          <div class="pf"><label>Capital (R$)</label><input type="number" id="pj-cap" value="5000" oninput="calcProj()"></div>
+          <div class="pf"><label>Taxa a.m. (%)</label><input type="number" id="pj-taxa" value="0.92" step="0.01" oninput="calcProj()"></div>
+          <div class="pf"><label>Período</label><select id="pj-per" onchange="calcProj()"><option value="30">30 dias</option><option value="60">60 dias</option><option value="90" selected>90 dias</option><option value="180">180 dias</option><option value="365">1 ano</option></select></div>
+          <div class="pf"><label>Tipo</label><select id="pj-tipo" onchange="calcProj()"><option value="simples">Juros simples</option><option value="compostos" selected>Juros compostos</option></select></div>
+        </div>
+        <div class="proj-res" id="pj-res"></div>
       </div>
-      <div class="form-group">
-        <label>Tipo</label>
-        <select id="recurringType" required>
-          <option value="income">💰 Entrada (Receita)</option>
-          <option value="expense">💸 Saída (Despesa)</option>
-        </select>
+      <div class="chart-wrap" style="margin:0 14px 14px">
+        <div class="chart-title">Evolução projetada</div>
+        <div style="position:relative;width:100%;height:170px"><canvas id="cProj" role="img" aria-label="Gráfico de evolução do investimento projetado"></canvas></div>
       </div>
-      <div class="form-group" id="recurringIncomeGroup">
-        <label>Classificação da Entrada</label>
-        <select id="recurringIncomeType">
-          <option value="fixed">Fixo (ex: Salário)</option>
-          <option value="variable">Variável (ex: Bônus)</option>
-        </select>
+      <div class="section" style="margin-top:0">
+        <div class="sec-title">Meus investimentos<button class="add-btn" onclick="openModal('investimento','investimento')">+ Adicionar</button></div>
+        <div class="entry-list" id="list-investimento-investimento"></div>
       </div>
-      <div class="form-group" id="recurringExpenseGroup" style="display:none">
-        <label>Classificação da Saída</label>
-        <select id="recurringExpenseType">
-          <option value="fixed">Fixo (ex: Aluguel)</option>
-          <option value="variable">Variável (ex: Mercado)</option>
-          <option value="credit">Cartão de Crédito</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Dia do mês</label>
-        <input type="number" id="recurringDay" min="1" max="31" value="1" required>
-      </div>
-      <div class="form-group">
-        <label>Categoria</label>
-        <select id="recurringCategory" required>
-          <optgroup label="Entradas">
-            <option value="salary">Salário</option>
-            <option value="freelance">Freelance</option>
-            <option value="rent">Aluguel recebido</option>
-            <option value="investment">Rendimento</option>
-          </optgroup>
-          <optgroup label="Saídas">
-            <option value="housing">Moradia</option>
-            <option value="food">Alimentação</option>
-            <option value="transport">Transporte</option>
-            <option value="utilities">Contas/Serviços</option>
-            <option value="education">Educação</option>
-            <option value="health">Saúde</option>
-            <option value="leisure">Lazer</option>
-          </optgroup>
-          <option value="other">Outros</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Data de início (opcional)</label>
-        <input type="date" id="recurringStartDate">
-      </div>
-      <div class="form-group">
-        <label>Data de término (opcional)</label>
-        <input type="date" id="recurringEndDate">
-      </div>
-      <div class="form-group">
-        <label style="display:flex; align-items:center; gap:8px;">
-          <input type="checkbox" id="recurringActive" checked style="width:auto;">
-          Ativo
-        </label>
-      </div>
-      <button type="submit" class="submit-btn">Salvar</button>
-    </form>
+    </div>
+
   </div>
 </div>
 
-<!-- Modal de Sobrescrita Mensal -->
-<div id="overrideModal" class="modal hidden">
-  <div class="modal-backdrop" id="overrideBackdrop"></div>
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-header">
-      <span class="modal-title">Ajustar para este mês</span>
-      <button class="modal-close" id="closeOverride">✕</button>
-    </div>
-    <div class="modal-form">
-      <div class="info-card" style="background:var(--surface3); border-radius:12px; padding:12px; margin-bottom:16px; text-align:center;">
-        <div style="font-size:12px; color:var(--text3)">Ajustando para</div>
-        <div style="font-size:16px; font-weight:600" id="overrideMonthDisplay"></div>
-        <div style="font-size:13px; margin-top:4px" id="overrideRuleDesc"></div>
-      </div>
-      <div class="form-group">
-        <label>Valor para este mês (R$)</label>
-        <input type="text" id="overrideAmount" placeholder="0,00" inputmode="decimal">
-      </div>
-      <div class="form-group">
-        <label style="display:flex; align-items:center; gap:8px;">
-          <input type="checkbox" id="overrideActive" checked style="width:auto;">
-          Incluir este mês
-        </label>
-      </div>
-      <div style="display:flex; gap:12px; margin-top:16px;">
-        <button type="button" class="cancel-btn" onclick="closeModal('overrideModal')">Cancelar</button>
-        <button type="button" class="delete-btn" onclick="removeOverride()">Remover ajuste</button>
-        <button type="button" class="submit-btn" onclick="saveOverride()">Salvar</button>
-      </div>
-    </div>
-  </div>
-</div>
+<button class="fab" onclick="openModalFab()" aria-label="Adicionar lançamento">+</button>
 
-  
-  <!-- Confirm delete modal -->
-  <div id="confirmModal" class="modal hidden">
-    <div class="modal-backdrop" id="confirmBackdrop"></div>
-    <div class="modal-sheet" style="padding-bottom: 2rem">
-      <div class="modal-handle"></div>
-      <div style="padding:1.5rem;text-align:center">
-        <div style="font-size:2rem;margin-bottom:12px">🗑️</div>
-        <div style="font-size:1rem;font-weight:600;margin-bottom:8px">Excluir item?</div>
-        <div style="font-size:0.875rem;color:#94a3b8;margin-bottom:24px">Essa ação não pode ser desfeita.</div>
-        <div style="display:flex;gap:12px">
-          <button class="cancel-btn" id="confirmCancel">Cancelar</button>
-          <button class="delete-btn" id="confirmDelete">Excluir</button>
-        </div>
-      </div>
-    </div>
+<nav class="nav-bar" role="navigation" aria-label="Navegação principal">
+  <button class="nav-item active" onclick="switchTab(0)" id="nav0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+    Resumo
+  </button>
+  <button class="nav-item" onclick="switchTab(1)" id="nav1">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+    Entradas
+  </button>
+  <button class="nav-item" onclick="switchTab(2)" id="nav2">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+    Saídas
+  </button>
+  <button class="nav-item" onclick="switchTab(3)" id="nav3">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+    Anual
+  </button>
+  <button class="nav-item" onclick="switchTab(4)" id="nav4">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+    Invest.
+  </button>
+</nav>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeOut(event)" role="dialog" aria-modal="true" aria-labelledby="modal-ttl">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-ttl">Novo lançamento</div>
+    <div class="field"><label>Descrição</label><input type="text" id="m-nome" placeholder="Ex: Salário, Conta de luz..."></div>
+    <div class="field"><label>Valor (R$)</label><input type="number" id="m-valor" placeholder="0,00" step="0.01" min="0" inputmode="decimal"></div>
+    <div class="field" id="m-tipo-f"><label>Tipo</label><div class="radio-group" id="m-tipo-g"></div></div>
+    <div class="field" id="m-cat-f"><label>Categoria</label><div class="radio-group" id="m-cat-g"></div></div>
+    <div class="field"><label>Ícone</label><div class="icon-sel" id="m-icons"></div></div>
+    <button class="btn-submit" onclick="saveEntry()">Salvar</button>
+    <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+</script>
 </body>
 </html>
