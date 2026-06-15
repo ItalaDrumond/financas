@@ -2,7 +2,7 @@
   "name": "Minha Grana",
   "short_name": "Grana",
   "description": "Controle financeiro pessoal",
-  "start_url": "/",
+  "start_url": "/financas/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
