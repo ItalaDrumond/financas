@@ -378,32 +378,101 @@ function saveEntry(){
   closeModal();
 }
 
-function editEntry(id, fixedId){
-  if(fixedId) {
-    const fe = fixedEntries.find(f => f.id === fixedId);
-    if(!fe) return;
-    const newVal = prompt('Novo valor para ' + fe.nome + ' (R$):', fe.valor);
-    if(newVal && !isNaN(parseFloat(newVal)) && parseFloat(newVal) > 0) {
-      fe.valor = parseFloat(newVal);
-      entries.forEach(e => {
-        if(e.fixedId === fixedId && e.ym === ymKey(curYear, curMonth)) {
-          e.valor = fe.valor;
-        }
-      });
-      persist();
-      renderAll();
-    }
-  } else {
-    del(id);
-  }
+let editCtx = { id: null, fixedId: null, selIcon: null };
+
+function buildEditIcons(selected) {
+  editCtx.selIcon = selected;
+  document.getElementById('e-icons').innerHTML = ICONS.map(ic =>
+    `<div class="iopt" onclick="selEditIco('${ic}',this)" style="background:${ic===selected?IBKG[ic]:'var(--bg-secondary)'};border-color:${ic===selected?ICOL[ic]:'transparent'};font-size:16px">${ic}</div>`
+  ).join('');
 }
 
-function del(id){
-  if(confirm('Remover este lançamento?')){
-    entries = entries.filter(e=>e.id!==id);
-    persist();
-    renderAll();
+function selEditIco(ic, el) {
+  editCtx.selIcon = ic;
+  document.querySelectorAll('#e-icons .iopt').forEach((d, i) => {
+    const iic = ICONS[i];
+    d.style.background = iic === ic ? IBKG[iic] : 'var(--bg-secondary)';
+    d.style.borderColor = iic === ic ? ICOL[iic] : 'transparent';
+  });
+}
+
+function editEntry(id, fixedId) {
+  editCtx.id = id;
+  editCtx.fixedId = fixedId || null;
+
+  let nome, valor, icon;
+  if (fixedId) {
+    const fe = fixedEntries.find(f => f.id === fixedId);
+    if (!fe) return;
+    // Use the current-month override values if they exist
+    const override = entries.find(e => e.fixedId === fixedId && e.ym === ymKey(curYear, curMonth));
+    nome  = override ? override.nome  : fe.nome;
+    valor = override ? override.valor : fe.valor;
+    icon  = override ? override.icon  : fe.icon;
+    document.getElementById('e-fixed-msg').style.display = 'block';
+  } else {
+    const entry = entries.find(e => e.id === id);
+    if (!entry) return;
+    nome  = entry.nome;
+    valor = entry.valor;
+    icon  = entry.icon;
+    document.getElementById('e-fixed-msg').style.display = 'none';
   }
+
+  document.getElementById('edit-ttl').textContent = 'Editar lançamento';
+  document.getElementById('e-nome').value  = nome;
+  document.getElementById('e-valor').value = valor;
+  buildEditIcons(icon);
+  document.getElementById('edit-overlay').classList.add('open');
+}
+
+function closeEditModal() { document.getElementById('edit-overlay').classList.remove('open'); }
+function closeEditOut(e)  { if (e.target === document.getElementById('edit-overlay')) closeEditModal(); }
+
+function saveEdit() {
+  const nome  = document.getElementById('e-nome').value.trim();
+  const valor = parseFloat(document.getElementById('e-valor').value);
+  if (!nome || !valor || valor <= 0) { document.getElementById('e-nome').focus(); return; }
+  const icon = editCtx.selIcon;
+
+  if (editCtx.fixedId) {
+    // Update only the current-month entry (override), not the template
+    entries.forEach(e => {
+      if (e.fixedId === editCtx.fixedId && e.ym === ymKey(curYear, curMonth)) {
+        e.nome  = nome;
+        e.valor = valor;
+        e.icon  = icon;
+      }
+    });
+  } else {
+    const entry = entries.find(e => e.id === editCtx.id);
+    if (entry) { entry.nome = nome; entry.valor = valor; entry.icon = icon; }
+  }
+
+  persist();
+  renderAll();
+  closeEditModal();
+}
+
+function deleteEntry() {
+  if (!confirm('Remover este lançamento?')) return;
+
+  if (editCtx.fixedId) {
+    // Remove only the current-month instance, keep the fixed template
+    entries = entries.filter(e => !(e.fixedId === editCtx.fixedId && e.ym === ymKey(curYear, curMonth)));
+  } else {
+    entries = entries.filter(e => e.id !== editCtx.id);
+  }
+
+  persist();
+  renderAll();
+  closeEditModal();
+}
+
+function del(id) {
+  editCtx.id = id;
+  editCtx.fixedId = null;
+  deleteEntry();
 }
 
 // ===== INIT =====
